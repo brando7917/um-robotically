@@ -1,6 +1,12 @@
 import discord
 from games import RedactedGame
 
+async def async_update(message: discord.Message, iterable):
+    for item in iterable:
+        should_yield = await item.update(message)
+        if should_yield:
+            yield item
+
 with open("discord.token", "r") as token_file:
     token = token_file.read()
 
@@ -20,18 +26,15 @@ class MyClient(discord.Client):
         
         if message.channel.type == discord.ChannelType.private:
             # Start a game
-            if message.author.id in self.games:
+            if any(message.author.id == game.author.id for game in self.games):
                 await message.channel.send('You have a game running')
                 return
-            self.games.add(RedactedGame(message))
+            self.games.add(RedactedGame(self, message))
             await message.channel.send('Starting Redacted Game')
             return
         
-        print(message.channel.id)
-        if message.channel.id == 1173819549326524537: # bot stuff channel
-            # Play a game
-            for game in self.games:
-                await game.update(message)
+        # Play each game, removing games that return False (done)
+        self.games = {game async for game in async_update(message, self.games)}
                 
 
 intents = discord.Intents.default()
