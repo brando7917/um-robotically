@@ -22,7 +22,7 @@ class RedactedGame():
             return True
         
         if message.author.id == self.author.id:
-            return True
+            return words[0].lower() != '!end'
         
         changes = False
         for word in words:
