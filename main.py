@@ -16,7 +16,6 @@ class MyClient(discord.Client):
         self.games = set()
 
     async def on_message(self, message):
-        print(f'Message from {message.author}: {message.content}')
         if message.author == self.user:
             return
         
@@ -28,6 +27,9 @@ class MyClient(discord.Client):
             # Start a game
             if any(message.author.id == game.author.id for game in self.games):
                 await message.channel.send('You have a game running')
+                return
+            if any(isinstance(game, RedactedGame) for game in self.games):
+                await message.channel.send('There is a game of this type running')
                 return
             self.games.add(RedactedGame(self, message))
             await message.channel.send('Starting Redacted Game')
