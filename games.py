@@ -14,7 +14,7 @@ class RedactedGame():
         self.author = message.author
         self.text = message.content.replace('[','||').replace(']','||')
         self.plain_text = self.text.replace('||', '')
-        self.tokens = re.findall('\|\|(.*?)\|\|', self.text)
+        self.tokens = set(re.findall('\|\|(.*?)\|\|', self.text))
         self.channel = client.get_partial_messageable(1173828105979318432)
         
     async def update(self, message: discord.Message) -> bool:
@@ -37,12 +37,13 @@ class RedactedGame():
         if message.author.id == self.author.id:
             return True
         
-        changes = False
+        to_remove = set()
         for word in words:
             for token in self.tokens:
                 if snow_stemmer.stem(word) == snow_stemmer.stem(token):
                     self.text = self.text.replace(f'||{token}||', token)
-                    changes = True
-        if changes:
+                    to_remove.add(token)
+        self.tokens = self.tokens.difference(to_remove)
+        if to_remove:
             await message.channel.send(censor(self.text))
         return '||' in self.text
