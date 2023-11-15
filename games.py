@@ -8,6 +8,44 @@ def censor(text: str) -> str:
     pattern = '\|\|.*?\|\|'
     return re.sub(pattern, '||XXXXX||', text)
 
+class TwentyQuestionsGame():
+    def __init__(self, client: discord.Client, message: discord.Message) -> None:
+        self.client = client
+        self.author = message.author
+        self.channel = message.channel
+        self.questions = []
+    
+    async def update_message(self, message: discord.Message) -> bool:
+        if message.channel.id != self.channel.id:
+            return True
+        
+        if message.content.startswith('!game'):
+            await message.channel.send(self.status())
+            return True
+        
+        if message.content.startswith('!end'):
+            await message.channel.send('Ending Twenty Questions')
+            return False
+        return True
+    
+    async def update_reaction(self, reaction_event: discord.RawReactionActionEvent) -> bool:
+        if reaction_event.user_id != self.author.id:
+            return True
+        if reaction_event.channel_id != self.channel.id:
+            return True
+        message = await self.channel.fetch_message(reaction_event.message_id)
+        if reaction_event.emoji.name == '✅':
+            self.questions.append(message.content + ' ✅')
+            await self.channel.send(f'{len(self.questions)} Question(s) Asked')
+        if reaction_event.emoji.name == '❌':
+            self.questions.append(message.content + ' ❌')
+            await self.channel.send(f'{len(self.questions)} Question(s) Asked')
+        return True
+            
+    def status(self) -> str:
+        return 'Twenty Questions:\n' + '\n'.join(self.questions)
+            
+
 class RedactedGame():
     def __init__(self, client: discord.Client, message: discord.Message) -> None:
         self.client = client
@@ -17,7 +55,7 @@ class RedactedGame():
         self.tokens = set(re.findall('\|\|(.*?)\|\|', self.text))
         self.channel = client.get_partial_messageable(1173828105979318432)
         
-    async def update(self, message: discord.Message) -> bool:
+    async def update_message(self, message: discord.Message) -> bool:
         words = message.content.replace(',','').lower().split()
         if message.author.id == self.author.id:
             if words[0] == '!reveal':
@@ -47,3 +85,6 @@ class RedactedGame():
         if to_remove:
             await message.channel.send(censor(self.text))
         return '||' in self.text
+    
+    async def update_reaction(self, reaction_event: discord.RawReactionActionEvent) -> bool:
+        return True # No-op on reactions
