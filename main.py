@@ -15,7 +15,7 @@ class MyClient(discord.Client):
         print(f'Logged on as {self.user}!')
         self.games = set()
 
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
         if message.author == self.user:
             return
         

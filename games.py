@@ -7,7 +7,7 @@ def censor(text: str) -> str:
     return re.sub(pattern, '||XXXXX||', text)
 
 class RedactedGame():
-    def __init__(self, client: discord.Client, message) -> None:
+    def __init__(self, client: discord.Client, message: discord.Message) -> None:
         self.client = client
         self.author = message.author
         self.text = message.content.replace('[','||').replace(']','||')
@@ -21,6 +21,7 @@ class RedactedGame():
                 await message.channel.send(self.plain_text)
                 return False
             if words[0].lower() == '!end':
+                await message.channel.send('Game Canceled')
                 return False
             
         if message.channel.id != self.channel.id:
