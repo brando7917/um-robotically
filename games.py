@@ -6,7 +6,7 @@ snow_stemmer = SnowballStemmer(language='english')
 
 def censor(text: str) -> str:
     pattern = '\|\|.*?\|\|'
-    return re.sub(pattern, '||XXXXX||', text)
+    return re.sub(pattern, '||XXX||', text)
 
 class TwentyQuestionsGame():
     def __init__(self, client: discord.Client, message: discord.Message) -> None:
