@@ -16,6 +16,7 @@ class TwentyQuestionsGame():
         self.questions = []
         self.reacts = ['✅', '❌', '❓', '⚔️']
         self.custom_reacts = ['fifty']
+        self.win_reacts = ['👑']
     
     async def update_message(self, message: discord.Message) -> bool:
         if message.channel.id != self.channel.id:
@@ -39,9 +40,14 @@ class TwentyQuestionsGame():
         if reaction_event.emoji.name in self.custom_reacts:
             self.questions.append(f'{message.content} <:{reaction_event.emoji.name}:{reaction_event.emoji.id}>')
             await self.channel.send(f'{len(self.questions)} Question(s) Asked')
+            return True
         if reaction_event.emoji.name in self.reacts:
             self.questions.append(f'{message.content} {reaction_event.emoji.name}')
             await self.channel.send(f'{len(self.questions)} Question(s) Asked')
+            return True
+        if reaction_event.emoji.name in self.win_reacts:
+            await self.channel.send(f'Congrats! You found the answer in {len(self.questions)} questions.')
+            return False
         return True
             
     def status(self) -> str:
