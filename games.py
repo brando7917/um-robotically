@@ -65,6 +65,8 @@ class RedactedGame():
         
     async def update_message(self, message: discord.Message) -> bool:
         words = message.content.replace(',','').lower().split()
+        if len(words) == 0:
+            return True
         if message.author.id == self.author.id:
             if words[0] == '!reveal':
                 await message.channel.send(self.plain_text)
