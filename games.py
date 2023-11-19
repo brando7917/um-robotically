@@ -26,7 +26,7 @@ class TwentyQuestionsGame():
             await message.channel.send(self.status())
             return True
         
-        if message.content.startswith('!end'):
+        if (message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles)) and message.content.startswith('!end'):
             await message.channel.send('Ending Twenty Questions')
             return False
         return True
@@ -67,7 +67,7 @@ class RedactedGame():
         words = message.content.replace(',','').lower().split()
         if len(words) == 0:
             return True
-        if message.author.id == self.author.id:
+        if message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles):
             if words[0] == '!reveal':
                 await message.channel.send(self.plain_text)
                 return False
