@@ -17,18 +17,26 @@ class TwentyQuestionsGame():
         self.reacts = ['✅', '❌', '❓', '⚔️']
         self.custom_reacts = ['fifty']
         self.win_reacts = ['👑']
+        if message.attachments:
+            self.image_embed = discord.Embed().set_image(url=message.attachments[0].url)
+        else:
+            self.image_embed = None
     
     async def update_message(self, message: discord.Message) -> bool:
         if message.channel.id != self.channel.id:
             return True
         
         if message.content.startswith('!game'):
-            await message.channel.send(self.status())
+            await message.channel.send(self.status(), embed=self.image_embed)
             return True
         
-        if (message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles)) and message.content.startswith('!end'):
-            await message.channel.send('Ending Twenty Questions')
-            return False
+        if (message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles)):
+            if message.content.startswith('!end'):
+                await message.channel.send('Ending Twenty Questions')
+                return False
+            if message.content.startswith('!delete'):
+                await message.channel.send(f'Deleted {self.questions.pop()}')
+                return True
         return True
     
     async def update_reaction(self, reaction_event: discord.RawReactionActionEvent) -> bool:
