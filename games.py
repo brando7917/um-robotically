@@ -116,7 +116,7 @@ class RedactedGame():
         to_remove = set()
         for word in words:
             for token in self.tokens:
-                if snow_stemmer.stem(word) == snow_stemmer.stem(token):
+                if snow_stemmer.stem(re.sub('\W', '', word)) == snow_stemmer.stem(re.sub('\W', '', token)):
                     self.text = self.text.replace(f'||{token}||', token)
                     to_remove.add(token)
         self.tokens = self.tokens.difference(to_remove)
