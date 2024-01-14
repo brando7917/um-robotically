@@ -66,9 +66,29 @@ class RedactedGame():
     def __init__(self, client: discord.Client, message: discord.Message) -> None:
         self.client = client
         self.author = message.author
-        self.text = message.content.replace('[','||').replace(']','||')
+        messageContent = message.content
+        
+        if messageContent.startswith('!'): #manual censoring
+            messageContent = messageContent[1:]
+        else: #auto censoring
+            newContent = ''
+            for line in messageContent.split('\n'):
+                colonIndex = line.find(':')+1
+                if colonIndex != -1:
+                    prefix = line[:colonIndex]
+                    body = line[colonIndex:]
+                    if prefix and prefix != 'Hint:':
+                        body = re.sub(r"([\w']+)", r'||\1||', body)
+                    newContent += prefix + body + '\n'
+                else:
+                    newContent += line + '\n'
+            messageContent = newContent
+        
+        self.text = messageContent.replace('[','||').replace(']','||')
         self.plain_text = self.text.replace('||', '')
         self.tokens = set(re.findall('\|\|(.*?)\|\|', self.text))
+        
+        
         self.channel = client.get_partial_messageable(1173828105979318432)
         
     async def update_message(self, message: discord.Message) -> bool:
@@ -102,7 +122,11 @@ class RedactedGame():
         self.tokens = self.tokens.difference(to_remove)
         if to_remove:
             await message.channel.send(censor(self.text))
-        return '||' in self.text
+        if '||' in self.text:
+            return True
+        else:
+            await message.channel.send('Congratulations!')
+            return False
     
     async def update_reaction(self, reaction_event: discord.RawReactionActionEvent) -> bool:
         return True # No-op on reactions
