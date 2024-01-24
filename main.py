@@ -1,5 +1,5 @@
 import discord
-from games import RedactedGame, TwentyQuestionsGame
+from games import RedactedGame, TwentyQuestionsGame, NeedsMorePixelsGame
 
 BOT_STUFF_ID = 1173819549326524537
 
@@ -36,7 +36,7 @@ class MyClient(discord.Client):
             return
         
         if message.content.startswith('!20q'):
-            # Start a game
+            # Start a 20 questions game
             if any(message.author.id == game.author.id for game in self.games):
                 await message.channel.send('You have a game running')
                 return
@@ -47,8 +47,25 @@ class MyClient(discord.Client):
             await message.channel.send('Starting 20 questions')
             return
         
+        if message.content.startswith('!nmp'):
+            # Start a Needs More Pixels game
+            if any(message.author.id == game.author.id for game in self.games):
+                await message.channel.send('You have a game running')
+                return
+            if any(isinstance(game, NeedsMorePixelsGame) for game in self.games):
+                await message.channel.send('There is a game of this type running')
+                return
+            if len(message.attachments) != 1:
+                await message.channel.send('Needs More Pixels takes one image at a time')
+                return
+            newGame = NeedsMorePixelsGame(self, message)
+            await newGame.set_image(message.attachments[0])
+            self.games.add(newGame)
+            await message.channel.send('Starting Needs More Pixels')
+            return
+        
         if message.channel.type == discord.ChannelType.private:
-            # Start a game
+            # Start a Redacted game
             if any(message.author.id == game.author.id for game in self.games):
                 await message.channel.send('You have a game running')
                 return

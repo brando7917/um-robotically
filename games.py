@@ -1,6 +1,9 @@
 import discord
+import io
 import re
+import os
 from nltk.stem.snowball import SnowballStemmer
+from PIL import Image
 
 snow_stemmer = SnowballStemmer(language='english')
 
@@ -128,5 +131,52 @@ class RedactedGame():
             await message.channel.send('Congratulations!')
             return False
     
+    async def update_reaction(self, reaction_event: discord.RawReactionActionEvent) -> bool:
+        return True # No-op on reactions
+
+class NeedsMorePixelsGame():
+    def __init__(self, client: discord.Client, message: discord.Message) -> None:
+        self.client = client
+        self.author = message.author
+        self.channel = client.get_partial_messageable(1173827731079827586) # NMP channel
+        self.image_file = io.BytesIO()
+        self.filetype = os.path.splitext(message.attachments[0].filename)[-1]
+        self.level = min(message.attachments[0].height, message.attachments[0].width) // 3
+    
+    async def set_image(self, attachment: discord.Attachment) -> None:
+        await attachment.save(self.image_file)
+        
+    async def update_message(self, message: discord.Message) -> bool:
+        words = message.content.replace(',','').lower().split()
+        if message.channel.id != self.channel.id:
+            return True
+        
+        if message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles):
+            if words[0] == '!reveal':
+                self.image_file.seek(0)
+                await message.channel.send(file=discord.File(self.image_file, filename="nmp"+self.filetype))
+                return False
+            if words[0] == '!end':
+                await message.channel.send('Game Canceled')
+                return False
+            if words[0] == '!next':
+                self.level //= 2
+                self.image_file.seek(0)
+                img = Image.open(self.image_file)
+                if self.level > 1:
+                    imgSmall = img.resize((img.width//self.level, img.height//self.level), resample=Image.Resampling.BILINEAR)
+                    imgBig = imgSmall.resize(img.size, Image.Resampling.NEAREST)
+                    newImg = io.BytesIO()
+                    imgBig.save(newImg, self.filetype[1:])
+                    newImg.seek(0)
+                    await message.channel.send(file=discord.File(newImg, filename="nmp"+self.filetype))
+                    return True
+                self.image_file.seek(0)
+                await message.channel.send(file=discord.File(self.image_file, filename="nmp"+self.filetype))
+                return False
+            
+        return True
+            
+            
     async def update_reaction(self, reaction_event: discord.RawReactionActionEvent) -> bool:
         return True # No-op on reactions
