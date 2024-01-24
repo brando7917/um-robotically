@@ -69,10 +69,10 @@ class RedactedGame():
     def __init__(self, client: discord.Client, message: discord.Message) -> None:
         self.client = client
         self.author = message.author
-        messageContent = message.content
+        messageContent = message.content[message.content.find('\n')+1:]
         
-        if messageContent.startswith('!'): #manual censoring
-            messageContent = messageContent[1:]
+        if message.content.startswith('!manualredact'): #manual censoring
+            pass
         else: #auto censoring
             newContent = ''
             for line in messageContent.split('\n'):
@@ -87,7 +87,7 @@ class RedactedGame():
                     newContent += line + '\n'
             messageContent = newContent
         
-        self.text = messageContent.replace('[','||').replace(']','||')
+        self.text = messageContent.replace('[','||').replace(']','||').replace('||||','')
         self.plain_text = self.text.replace('||', '')
         self.tokens = set(re.findall('\|\|(.*?)\|\|', self.text))
         
@@ -105,6 +105,10 @@ class RedactedGame():
             if words[0] == '!end':
                 await message.channel.send('Game Canceled')
                 return False
+        
+        if words[0] == '!game' and isinstance(message.channel, discord.DMChannel) and message.author.id == self.author.id:
+            await message.channel.send(censor(self.text))
+            return True
             
         if message.channel.id != self.channel.id:
             return True
@@ -141,6 +145,8 @@ class NeedsMorePixelsGame():
         self.channel = client.get_partial_messageable(1173827731079827586) # NMP channel
         self.image_file = io.BytesIO()
         self.filetype = os.path.splitext(message.attachments[0].filename)[-1]
+        if self.filetype.lower() == ".jpg":
+            self.filetype = ".jpeg"
         self.level = min(message.attachments[0].height, message.attachments[0].width) // 3
     
     async def set_image(self, attachment: discord.Attachment) -> None:

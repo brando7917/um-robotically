@@ -64,7 +64,7 @@ class MyClient(discord.Client):
             await message.channel.send('Starting Needs More Pixels')
             return
         
-        if message.channel.type == discord.ChannelType.private:
+        if message.content.startswith('!redact') or message.content.startswith('!manualredact'):
             # Start a Redacted game
             if any(message.author.id == game.author.id for game in self.games):
                 await message.channel.send('You have a game running')
