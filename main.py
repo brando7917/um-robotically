@@ -22,6 +22,7 @@ class MyClient(discord.Client):
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
         self.games = set()
+        self.game_queue = []
         
     async def on_raw_reaction_add(self, reaction_event: discord.RawReactionActionEvent):
         # Play each game, removing games that return False (done)
@@ -53,7 +54,10 @@ class MyClient(discord.Client):
                 await message.channel.send('You have a game running')
                 return
             if any(isinstance(game, NeedsMorePixelsGame) for game in self.games):
-                await message.channel.send('There is a game of this type running')
+                newGame = NeedsMorePixelsGame(self, message)
+                await newGame.set_image(message.attachments[0])
+                self.game_queue.append(newGame)
+                await message.channel.send('You have been added to the Needs More Pixels Queue')
                 return
             if len(message.attachments) != 1:
                 await message.channel.send('Needs More Pixels takes one image at a time')
@@ -78,6 +82,12 @@ class MyClient(discord.Client):
         
         # Play each game, removing games that return False (done)
         self.games = {game async for game in async_update_message(self.games, message)}
+        # Add a NMP if possible
+        if len(self.game_queue) > 0 and not any(isinstance(game, NeedsMorePixelsGame) for game in self.games):
+            newGame = self.game_queue.pop(0)
+            await newGame.author.send('Your turn for Needs More Pixels')
+            self.games.add(newGame)
+            
                 
 
 intents = discord.Intents.default()
