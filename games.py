@@ -147,7 +147,9 @@ class NeedsMorePixelsGame():
         self.filetype = os.path.splitext(message.attachments[0].filename)[-1]
         if self.filetype.lower() == ".jpg":
             self.filetype = ".jpeg"
-        self.level = min(message.attachments[0].height, message.attachments[0].width) // 3
+        words = message.content.split()
+        self.levels = [1000, 500, 250, 100, 50, 30, 20, 10, 5, 1]
+        self.level = 1 if len(words) < 2 else (len(self.levels) - int(words[-1]) - 1)
     
     async def set_image(self, attachment: discord.Attachment) -> None:
         await attachment.save(self.image_file)
@@ -166,16 +168,17 @@ class NeedsMorePixelsGame():
                 await message.channel.send('Game Canceled')
                 return False
             if words[0] == '!next':
-                self.level //= 2
+                self.level += 1
                 self.image_file.seek(0)
                 img = Image.open(self.image_file)
                 if self.level > 1:
-                    imgSmall = img.resize((img.width//self.level, img.height//self.level), resample=Image.Resampling.BILINEAR)
+                    pixelfactor = self.levels[self.level]
+                    imgSmall = img.resize((img.width//pixelfactor, img.height//pixelfactor), resample=Image.Resampling.BILINEAR)
                     imgBig = imgSmall.resize(img.size, Image.Resampling.NEAREST)
                     newImg = io.BytesIO()
                     imgBig.save(newImg, self.filetype[1:])
                     newImg.seek(0)
-                    await message.channel.send(file=discord.File(newImg, filename="nmp"+self.filetype))
+                    await message.channel.send(f'Round {self.level+1}/{len(self.levels)}', file=discord.File(newImg, filename="nmp"+self.filetype))
                     return True
                 self.image_file.seek(0)
                 await message.channel.send(file=discord.File(self.image_file, filename="nmp"+self.filetype))
