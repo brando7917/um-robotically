@@ -148,7 +148,7 @@ class NeedsMorePixelsGame():
         if self.filetype.lower() == ".jpg":
             self.filetype = ".jpeg"
         words = message.content.split()
-        self.levels = [1000, 500, 250, 100, 50, 30, 20, 10, 5, 1]
+        self.levels = [1000, 500, 250, 100, 50, 30, 20, 10, 5]
         self.level = 1 if len(words) < 2 else (len(self.levels) - int(words[-1]) - 1)
     
     async def set_image(self, attachment: discord.Attachment) -> None:
@@ -171,7 +171,7 @@ class NeedsMorePixelsGame():
                 self.level += 1
                 self.image_file.seek(0)
                 img = Image.open(self.image_file)
-                if self.level > 1:
+                if self.level < len(self.levels):
                     pixelfactor = self.levels[self.level]
                     imgSmall = img.resize((img.width//pixelfactor, img.height//pixelfactor), resample=Image.Resampling.BILINEAR)
                     imgBig = imgSmall.resize(img.size, Image.Resampling.NEAREST)
