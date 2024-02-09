@@ -9,7 +9,12 @@ snow_stemmer = SnowballStemmer(language='english')
 
 def censor(text: str) -> str:
     pattern = '\|\|.*?\|\|'
-    return re.sub(pattern, '||XXX||', text)
+    censored = re.sub(pattern, '||XXX||', text)
+    if len(censored) >= 2000:
+        censored = re.sub(pattern, '||XX||', text)
+    if len(censored) >= 2000:
+        censored = re.sub(pattern, '||X||', text)
+    return censored
 
 class TwentyQuestionsGame():
     def __init__(self, client: discord.Client, message: discord.Message) -> None:
@@ -98,6 +103,21 @@ class RedactedGame():
         words = message.content.replace(',','').lower().split()
         if len(words) == 0:
             return True
+        
+        # Parse the !game command only in a DM or the game
+        if (words[0] == '!game' and
+            (
+                (isinstance(message.channel, discord.DMChannel) and message.author.id == self.author.id)
+                or message.channel.id == self.channel.id
+            )):
+            await message.channel.send(censor(self.text))
+            return True
+        
+        # Don't process messages outside the game channel
+        if message.channel.id != self.channel.id:
+            return True
+        
+        # Let the game creator or mod end the game
         if message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles):
             if words[0] == '!reveal':
                 await message.channel.send(self.plain_text)
@@ -106,17 +126,7 @@ class RedactedGame():
                 await message.channel.send('Game Canceled')
                 return False
         
-        if words[0] == '!game' and isinstance(message.channel, discord.DMChannel) and message.author.id == self.author.id:
-            await message.channel.send(censor(self.text))
-            return True
-            
-        if message.channel.id != self.channel.id:
-            return True
-        
-        if words[0] == '!game':
-            await message.channel.send(censor(self.text))
-            return True
-        
+        # Don't process words by the game creator
         if message.author.id == self.author.id:
             return True
         
