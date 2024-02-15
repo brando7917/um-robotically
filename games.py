@@ -159,9 +159,12 @@ class NeedsMorePixelsGame():
         self.filetype = os.path.splitext(message.attachments[0].filename)[-1]
         if self.filetype.lower() == ".jpg":
             self.filetype = ".jpeg"
+        self.resize_values = None
         words = message.content.split()
-        self.levels = [300, 200, 150, 100, 50, 30, 20, 10, 5]
-        self.level = 1 if len(words) < 2 else (len(self.levels) - int(words[-1]) - 1)
+        if len(words) == 2:
+            self.round_count = int(words[1])
+        else:
+            self.round_count = 10
     
     async def set_image(self, attachment: discord.Attachment) -> None:
         await attachment.save(self.image_file)
@@ -180,17 +183,28 @@ class NeedsMorePixelsGame():
                 await message.channel.send('Game Canceled')
                 return False
             if words[0] == '!next':
-                self.level += 1
                 self.image_file.seek(0)
                 img = Image.open(self.image_file)
-                if self.level < len(self.levels):
-                    pixelfactor = self.levels[self.level]
-                    imgSmall = img.resize((img.width//pixelfactor, img.height//pixelfactor), resample=Image.Resampling.BILINEAR)
+                # Calculate the resize values on the first round
+                if not self.resize_values:
+                    if img.width < img.height:
+                        total_mult_factor = img.width / 5 # Start with 5 boxes
+                        individual_mult_factor = pow(total_mult_factor, 1 / (self.round_count - 1))
+                        self.resize_values = [(int(5 * pow(individual_mult_factor, i)), int((5 * pow(individual_mult_factor, i) * img.height) // img.width)) for i in range(self.round_count)]
+                    else:
+                        total_mult_factor = img.height / 5 # Start with 5 boxes
+                        individual_mult_factor = pow(total_mult_factor, 1 / (self.round_count - 1))
+                        self.resize_values = [(int((5 * pow(individual_mult_factor, i) * img.width) // img.height), int(5 * pow(individual_mult_factor, i))) for i in range(self.round_count)]
+                    self.current_round = 1    
+                if self.current_round <= self.round_count:
+                    pixelfactor = self.resize_values[self.current_round - 1]
+                    imgSmall = img.resize(pixelfactor, resample=Image.Resampling.BILINEAR)
                     imgBig = imgSmall.resize(img.size, Image.Resampling.NEAREST)
                     newImg = io.BytesIO()
                     imgBig.save(newImg, self.filetype[1:])
                     newImg.seek(0)
-                    await message.channel.send(f'Round {self.level+1}/{len(self.levels)}', file=discord.File(newImg, filename="nmp"+self.filetype))
+                    await message.channel.send(f'Round {self.current_round}/{self.round_count}', file=discord.File(newImg, filename="nmp"+self.filetype))
+                    self.current_round += 1
                     return True
                 self.image_file.seek(0)
                 await message.channel.send(file=discord.File(self.image_file, filename="nmp"+self.filetype))
