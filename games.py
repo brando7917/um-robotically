@@ -138,6 +138,10 @@ class RedactedGame():
                 if snow_stemmer.stem(re.sub('\W', '', word)) == snow_stemmer.stem(re.sub('\W', '', token)):
                     self.text = self.text.replace(f'||{token}||', token)
                     to_remove.add(token)
+                if token.lower().endswith('in'):
+                    if snow_stemmer.stem(re.sub('\W', '', word)) == snow_stemmer.stem(re.sub('\W', '', token+'g')):
+                        self.text = self.text.replace(f'||{token}||', token)
+                        to_remove.add(token)
         self.tokens = self.tokens.difference(to_remove)
         if to_remove:
             await message.channel.send(censor(self.text))
