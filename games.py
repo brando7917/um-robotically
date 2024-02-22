@@ -138,7 +138,7 @@ class RedactedGame():
                 if snow_stemmer.stem(re.sub('\W', '', word)) == snow_stemmer.stem(re.sub('\W', '', token)):
                     self.text = self.text.replace(f'||{token}||', token)
                     to_remove.add(token)
-                if token.lower().endswith('in'):
+                if re.sub('\W', '', token).lower().endswith('in'):
                     if snow_stemmer.stem(re.sub('\W', '', word)) == snow_stemmer.stem(re.sub('\W', '', token+'g')):
                         self.text = self.text.replace(f'||{token}||', token)
                         to_remove.add(token)
