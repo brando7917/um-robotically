@@ -78,7 +78,7 @@ class RedactedGame():
         
         if message.content.startswith('!manualredact'): #manual censoring
             pass
-        if message.content.startswith('!redactall'):
+        elif message.content.startswith('!redactall'):
             messageContent = re.sub(r"([\w']+)", r'||\1||', messageContent)
         else: #auto censoring
             newContent = ''
