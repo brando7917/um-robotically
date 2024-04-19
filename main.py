@@ -53,9 +53,9 @@ class MyClient(discord.Client):
         
         if message.content.startswith('!nmp'):
             # Start a Needs More Pixels game
-            if any(message.author.id == game.author.id for game in self.games):
-                await message.channel.send('You have a game running')
-                return
+            # if any(message.author.id == game.author.id for game in self.games):
+            #    await message.channel.send('You have a game running')
+            #    return
             if any(isinstance(game, NeedsMorePixelsGame) for game in self.games):
                 newGame = NeedsMorePixelsGame(self, message)
                 await newGame.set_image(message.attachments[0])
@@ -73,9 +73,9 @@ class MyClient(discord.Client):
         
         if message.content.startswith('!redact') or message.content.startswith('!manualredact'):
             # Start a Redacted game
-            if any(message.author.id == game.author.id for game in self.games):
-                await message.channel.send('You have a game running')
-                return
+            # if any(message.author.id == game.author.id for game in self.games):
+            #    await message.channel.send('You have a game running')
+            #    return
             if any(isinstance(game, RedactedGame) for game in self.games):
                 await message.channel.send('There is a game of this type running')
                 return
