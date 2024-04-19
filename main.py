@@ -41,9 +41,9 @@ class MyClient(discord.Client):
         
         if message.content.startswith('!20q'):
             # Start a 20 questions game
-            if any(message.author.id == game.author.id for game in self.games):
-                await message.channel.send('You have a game running')
-                return
+            # if any(message.author.id == game.author.id for game in self.games):
+            #    await message.channel.send('You have a game running')
+            #    return
             if any(isinstance(game, TwentyQuestionsGame) for game in self.games):
                 await message.channel.send('There is a game of this type running')
                 return
