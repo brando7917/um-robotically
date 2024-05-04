@@ -48,16 +48,16 @@ class HiddenConnectionsGame():
         if message.content.startswith('!solve'):
             number, answer = message.content[6:].split(maxsplit=1)
             self.answers[int(number)-1] = answer
-            await message.add_reaction('👍')
+            await message.add_reaction('✍️')
             return True
         if message.content.startswith('!clear'):
             number = int(message.content[6:])-1
             self.answers[number] = self.clues[number]
-            await message.add_reaction('👍')
+            await message.add_reaction('✍️')
             return True
         if message.content.startswith('!theme'):
             self.theme = message.content.split(maxsplit=1)[1]
-            await message.add_reaction('👍')
+            await message.add_reaction('✍️')
             return True
         return True
     
