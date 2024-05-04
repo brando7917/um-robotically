@@ -16,6 +16,54 @@ def censor(text: str) -> str:
         censored = re.sub(pattern, '||X||', text)
     return censored
 
+class HiddenConnectionsGame():
+    def __init__(self, client: discord.Client, message: discord.Message) -> None:
+        self.client = client
+        self.author = message.author
+        self.channel = message.channel
+        
+        # Gather the individual lines
+        clues = [clue.strip() for clue in message.content.split('\n')][1:]
+        if all(clue.startswith('>') for clue in clues):
+            clues = [clue[1:].strip() for clue in clues]
+        
+        self.clues = clues
+        self.answers = clues[:] # Deep copy the clues
+        self.theme = '???'
+    
+    def status(self) -> str:
+        return f'Hidden Connections Theme: {self.theme}\n' + '\n'.join(f'> {answer}' for answer in self.answers)
+    
+    async def update_message(self, message: discord.Message) -> bool:
+        if message.channel.id != self.channel.id:
+            return True
+        
+        if message.content.startswith('!game'):
+            await message.channel.send(self.status())
+            return True
+        if (message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles)):
+            if message.content.startswith('!end'):
+                await message.channel.send('Congratulations!')
+                return False
+        if message.content.startswith('!solve'):
+            number, answer = message.content[6:].split(maxsplit=1)
+            self.answers[int(number)-1] = answer
+            await message.add_reaction('👍')
+            return True
+        if message.content.startswith('!clear'):
+            number = int(message.content[6:])-1
+            self.answers[number] = self.clues[number]
+            await message.add_reaction('👍')
+            return True
+        if message.content.startswith('!theme'):
+            self.theme = message.content.split(maxsplit=1)[1]
+            await message.add_reaction('👍')
+            return True
+        return True
+    
+    async def update_reaction(self, reaction_event: discord.RawReactionActionEvent) -> bool:
+        return True # No-op on reactions
+
 class TwentyQuestionsGame():
     def __init__(self, client: discord.Client, message: discord.Message) -> None:
         self.client = client
@@ -69,7 +117,6 @@ class TwentyQuestionsGame():
     def status(self) -> str:
         return 'Twenty Questions:\n' + '\n'.join(self.questions)
             
-
 class RedactedGame():
     def __init__(self, client: discord.Client, message: discord.Message) -> None:
         self.client = client

@@ -1,5 +1,5 @@
 import discord
-from games import RedactedGame, TwentyQuestionsGame, NeedsMorePixelsGame
+from games import RedactedGame, TwentyQuestionsGame, NeedsMorePixelsGame, HiddenConnectionsGame
 
 BOT_STUFF_ID = 1173819549326524537
 
@@ -49,6 +49,18 @@ class MyClient(discord.Client):
                 return
             self.games.add(TwentyQuestionsGame(self, message))
             await message.channel.send('Starting 20 questions')
+            return
+        
+        if message.content.startswith('!hc'):
+            # Start a Hidden Connections game
+            if any(message.author.id == game.author.id for game in self.games):
+                await message.channel.send('You have a game running')
+                return
+            if any(isinstance(game, HiddenConnectionsGame) for game in self.games):
+                await message.channel.send('There is a game of this type running')
+                return
+            self.games.add(HiddenConnectionsGame(self, message))
+            await message.channel.send('Starting Hidden Connections Game')
             return
         
         if message.content.startswith('!nmp'):
