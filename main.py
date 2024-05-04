@@ -33,7 +33,7 @@ class MyClient(discord.Client):
             return
         
         if message.content.startswith('!hello'):
-            await message.channel.send('Hello')
+            await message.channel.send('Hello 1.1')
             return
         
         if message.content.startswith('!kill') and message.author.id == '242558859300831232':
