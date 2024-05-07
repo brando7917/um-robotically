@@ -30,6 +30,7 @@ class HiddenConnectionsGame():
         self.clues = clues
         self.answers = clues[:] # Deep copy the clues
         self.theme = '???'
+        self.message = None
     
     def status(self) -> str:
         return f'Hidden Connections Theme: {self.theme}\n' + '\n'.join(f'> {answer}' for answer in self.answers)
@@ -39,25 +40,39 @@ class HiddenConnectionsGame():
             return True
         
         if message.content.startswith('!game'):
-            await message.channel.send(self.status())
+            self.message = await message.channel.send(self.status())
             return True
         if (message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles)):
             if message.content.startswith('!end'):
                 await message.channel.send('Congratulations!')
                 return False
+            if message.content.startswith('!add'):
+                number, new_clue = message.content[4:].split(maxsplit=1)
+                self.clues.insert(int(number)-1, new_clue)
+                self.answers.insert(int(number)-1, new_clue)
+                await message.add_reaction('✍️')
+                if self.message:
+                    await self.message.edit(content=self.status())
+                return True
         if message.content.startswith('!solve'):
             number, answer = message.content[6:].split(maxsplit=1)
             self.answers[int(number)-1] = answer
             await message.add_reaction('✍️')
+            if self.message:
+                await self.message.edit(content=self.status())
             return True
         if message.content.startswith('!clear'):
             number = int(message.content[6:])-1
             self.answers[number] = self.clues[number]
             await message.add_reaction('✍️')
+            if self.message:
+                await self.message.edit(content=self.status())
             return True
         if message.content.startswith('!theme'):
             self.theme = message.content.split(maxsplit=1)[1]
             await message.add_reaction('✍️')
+            if self.message:
+                await self.message.edit(content=self.status())
             return True
         return True
     
