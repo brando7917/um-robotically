@@ -199,8 +199,8 @@ class RedactedGame():
                 return False
         
         # Don't process words by the game creator
-        # if message.author.id == self.author.id:
-        #     return True
+        if message.author.id == self.author.id:
+            return True
         
         to_remove = set()
         for word in words:
