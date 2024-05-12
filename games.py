@@ -4,17 +4,9 @@ import re
 import os
 from nltk.stem.snowball import SnowballStemmer
 from PIL import Image
+from datetime import datetime, timezone, timedelta
 
 snow_stemmer = SnowballStemmer(language='english')
-
-def censor(text: str) -> str:
-    pattern = '\|\|.*?\|\|'
-    censored = re.sub(pattern, '||XXX||', text)
-    if len(censored) >= 2000:
-        censored = re.sub(pattern, '||XX||', text)
-    if len(censored) >= 2000:
-        censored = re.sub(pattern, '||X||', text)
-    return censored
 
 class HiddenConnectionsGame():
     def __init__(self, client: discord.Client, message: discord.Message) -> None:
@@ -42,6 +34,7 @@ class HiddenConnectionsGame():
         if message.content.startswith('!game'):
             self.message = await message.channel.send(self.status())
             return True
+        
         if (message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles)):
             if message.content.startswith('!end'):
                 await message.channel.send('Congratulations!')
@@ -92,13 +85,14 @@ class TwentyQuestionsGame():
             self.image_embed = discord.Embed().set_image(url=message.attachments[0].url)
         else:
             self.image_embed = None
+        self.message: discord.Message = None
     
     async def update_message(self, message: discord.Message) -> bool:
         if message.channel.id != self.channel.id:
             return True
         
         if message.content.startswith('!game'):
-            await message.channel.send(self.status(), embed=self.image_embed)
+            self.message = await message.channel.send(self.status(), embed=self.image_embed)
             return True
         
         if (message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles)):
@@ -119,10 +113,14 @@ class TwentyQuestionsGame():
         if reaction_event.emoji.name in self.custom_reacts:
             self.questions.append(f'{message.content} <:{reaction_event.emoji.name}:{reaction_event.emoji.id}>')
             await self.channel.send(f'{len(self.questions)} Question(s) Asked')
+            if self.message:
+                await self.message.edit(content=self.status(), embed=self.image_embed)
             return True
         if reaction_event.emoji.name in self.reacts:
             self.questions.append(f'{message.content} {reaction_event.emoji.name}')
             await self.channel.send(f'{len(self.questions)} Question(s) Asked')
+            if self.message:
+                await self.message.edit(content=self.status(), embed=self.image_embed)
             return True
         if reaction_event.emoji.name in self.win_reacts:
             await self.channel.send(f'Congrats! You found the answer in {len(self.questions)} questions.')
@@ -162,6 +160,16 @@ class RedactedGame():
         
         
         self.channel = client.get_partial_messageable(1173828105979318432)
+        self.message = None
+    
+    def censor(self) -> str:
+        pattern = '\|\|.*?\|\|'
+        censored = re.sub(pattern, '||XXX||', self.text)
+        if len(censored) >= 2000:
+            censored = re.sub(pattern, '||XX||', self.text)
+        if len(censored) >= 2000:
+            censored = re.sub(pattern, '||X||', self.text)
+        return censored
         
     async def update_message(self, message: discord.Message) -> bool:
         words = message.content.replace(',','').lower().split()
@@ -174,7 +182,7 @@ class RedactedGame():
                 (isinstance(message.channel, discord.DMChannel) and message.author.id == self.author.id)
                 or message.channel.id == self.channel.id
             )):
-            await message.channel.send(censor(self.text))
+            self.message = await message.channel.send(self.censor())
             return True
         
         # Don't process messages outside the game channel
@@ -191,8 +199,8 @@ class RedactedGame():
                 return False
         
         # Don't process words by the game creator
-        if message.author.id == self.author.id:
-            return True
+        # if message.author.id == self.author.id:
+        #     return True
         
         to_remove = set()
         for word in words:
@@ -206,7 +214,15 @@ class RedactedGame():
                         to_remove.add(token)
         self.tokens = self.tokens.difference(to_remove)
         if to_remove:
-            await message.channel.send(censor(self.text))
+            # If it the first message has been more than 10 seconds since the last message, send a new one
+            # Otherwise, if it has been more than 1 second since the last edit, edit the last message
+            # Otherwise, no-op
+            now = datetime.now(tz=timezone.utc)
+            if (not self.message) or ((now - self.message.created_at) > timedelta(seconds=10)):
+                self.message = await message.channel.send(self.censor())
+            elif (not self.message.edited_at) or (self.message.edited_at and ((now - self.message.edited_at) > timedelta(seconds=1))):
+                await self.message.edit(content=self.censor())
+                await message.add_reaction('✍️')
         if '||' in self.text:
             return True
         else:
