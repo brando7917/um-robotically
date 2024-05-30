@@ -164,11 +164,17 @@ class RedactedGame():
     
     def censor(self) -> str:
         pattern = '\|\|.*?\|\|'
+        drastic_pattern = '\|\| \|\|'
         censored = re.sub(pattern, '||XXX||', self.text)
         if len(censored) >= 2000:
             censored = re.sub(pattern, '||XX||', self.text)
         if len(censored) >= 2000:
             censored = re.sub(pattern, '||X||', self.text)
+        
+        # if still busted, take drastic measures
+        while (len(censored) >= 2000):
+            censored = re.sub(drastic_pattern, '', censored)
+        
         return censored
         
     async def update_message(self, message: discord.Message) -> bool:
@@ -221,8 +227,8 @@ class RedactedGame():
             if (not self.message) or ((now - self.message.created_at) > timedelta(seconds=10)):
                 self.message = await message.channel.send(self.censor())
             elif (not self.message.edited_at) or (self.message.edited_at and ((now - self.message.edited_at) > timedelta(seconds=1))):
-                await self.message.edit(content=self.censor())
                 await message.add_reaction('✍️')
+                await self.message.edit(content=self.censor())
         if '||' in self.text:
             return True
         else:
