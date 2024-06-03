@@ -156,15 +156,15 @@ class RedactedGame():
         
         self.text = messageContent.replace('[','||').replace(']','||').replace('||||','')
         self.plain_text = self.text.replace('||', '')
-        self.tokens = set(re.findall('\|\|(.*?)\|\|', self.text))
+        self.tokens = set(re.findall(r'\|\|(.*?)\|\|', self.text))
         
         
         self.channel = client.get_partial_messageable(1173828105979318432)
         self.message = None
     
     def censor(self) -> str:
-        pattern = '\|\|.*?\|\|'
-        drastic_pattern = '\|\| \|\|'
+        pattern = r'\|\|.*?\|\|'
+        drastic_pattern = r'\|\| \|\|'
         censored = re.sub(pattern, '||XXX||', self.text)
         if len(censored) >= 2000:
             censored = re.sub(pattern, '||XX||', self.text)
@@ -211,11 +211,11 @@ class RedactedGame():
         to_remove = set()
         for word in words:
             for token in self.tokens:
-                if snow_stemmer.stem(re.sub('\W', '', word)) == snow_stemmer.stem(re.sub('\W', '', token)):
+                if snow_stemmer.stem(re.sub(r'\W', '', word)) == snow_stemmer.stem(re.sub(r'\W', '', token)):
                     self.text = self.text.replace(f'||{token}||', token)
                     to_remove.add(token)
-                if re.sub('\W', '', token).lower().endswith('in'):
-                    if snow_stemmer.stem(re.sub('\W', '', word)) == snow_stemmer.stem(re.sub('\W', '', token+'g')):
+                if re.sub(r'\W', '', token).lower().endswith('in'):
+                    if snow_stemmer.stem(re.sub(r'\W', '', word)) == snow_stemmer.stem(re.sub(r'\W', '', token+'g')):
                         self.text = self.text.replace(f'||{token}||', token)
                         to_remove.add(token)
         self.tokens = self.tokens.difference(to_remove)
