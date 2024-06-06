@@ -23,9 +23,13 @@ class HiddenConnectionsGame():
         self.answers = clues[:] # Deep copy the clues
         self.theme = '???'
         self.message = None
+        self.numbered = message.content.startswith('!hc#')
     
     def status(self) -> str:
-        return f'Hidden Connections Theme: {self.theme}\n' + '\n'.join(f'> {answer}' for answer in self.answers)
+        if self.numbered:
+            return f'Hidden Connections Theme: {self.theme}\n' + '\n'.join(f'> {i}. {answer}' for i, answer in enumerate(self.answers, 1))
+        else:
+            return f'Hidden Connections Theme: {self.theme}\n' + '\n'.join(f'> {answer}' for answer in self.answers)
     
     async def update_message(self, message: discord.Message) -> bool:
         if message.channel.id != self.channel.id:
