@@ -38,6 +38,12 @@ class MyClient(discord.Client):
         
         if message.content.startswith('!kill') and message.author.id == '242558859300831232':
             quit()
+        if message.content.startswith('!owner'):
+            for game in self.games:
+                if game.channel.id == message.channel.id:
+                    await message.channel.send(game.author.mention)
+            return
+            
         
         if message.content.startswith('!20q'):
             # Start a 20 questions game
