@@ -97,6 +97,9 @@ class MyClient(discord.Client):
             if any(isinstance(game, RedactedGame) for game in self.games):
                 await message.channel.send('There is a game of this type running')
                 return
+            if len(message.content) >= 2000:
+                await message.channel.send('Your game is too long, there is a 2000 character limit')
+                return
             self.games.add(RedactedGame(self, message))
             await message.channel.send('Starting Redacted Game')
             return

@@ -51,6 +51,14 @@ class HiddenConnectionsGame():
                 if self.message:
                     await self.message.edit(content=self.status())
                 return True
+            if message.content.startswith('!edit'):
+                number, new_clue = message.content[5:].split(maxsplit=1)
+                self.clues[int(number)-1] = new_clue
+                self.answers[int(number)-1] = new_clue
+                await message.add_reaction('✍️')
+                if self.message:
+                    await self.message.edit(content=self.status())
+                return True
         if message.content.startswith('!solve'):
             number, answer = message.content[6:].split(maxsplit=1)
             self.answers[int(number)-1] = answer
@@ -138,7 +146,7 @@ class RedactedGame():
     def __init__(self, client: discord.Client, message: discord.Message) -> None:
         self.client = client
         self.author = message.author
-        messageContent = message.content[message.content.find('\n')+1:]
+        messageContent = message.content[message.content.find('\n')+1:].replace('’', "'")
         
         if message.content.startswith('!manualredact'): #manual censoring
             pass
@@ -186,15 +194,14 @@ class RedactedGame():
         if len(words) == 0:
             return True
         
-        # Parse the !game command only in a DM or the game
-        if (words[0] == '!game' and
-            (
-                (isinstance(message.channel, discord.DMChannel) and message.author.id == self.author.id)
-                or message.channel.id == self.channel.id
-            )):
-            self.message = await message.channel.send(self.censor())
-            return True
-        
+        # Parse the !game and !end command in a DM or the game
+        if (isinstance(message.channel, discord.DMChannel) and message.author.id == self.author.id) or message.channel.id == self.channel.id:
+            if words[0] == '!game':
+                self.message = await message.channel.send(self.censor())
+                return True
+            if words[0] == '!end':
+                await message.channel.send('Game Canceled')
+                return False
         # Don't process messages outside the game channel
         if message.channel.id != self.channel.id:
             return True
