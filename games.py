@@ -59,6 +59,41 @@ class HiddenConnectionsGame():
                 if self.message:
                     await self.message.edit(content=self.status())
                 return True
+            
+        if message.content.startswith('!rowtheme'):
+            number, theme = message.content[9:].split(maxsplit=1)
+            answer = self.answers[int(number)-1]
+            if hint := re.search(r"- ?\*.*\*$", answer):
+                hint_text = hint.group()
+                answer = answer[:len(hint_text) * -1]
+            self.answers[int(number)-1] = answer.strip() + f' - *{theme}*'
+            await message.add_reaction('✍️')
+            if self.message:
+                await self.message.edit(content=self.status())
+            return True
+        
+        if message.content.startswith('!adjust'):
+            indeces, answer = message.content[7:].split(maxsplit=1)
+            # Parse indeces: row,entry, 1-indexed
+            row, entry = indeces.split(sep=',')
+            # Split row into sections
+            sections = self.answers[int(row)-1].split(sep=' + ')
+            hint_text = None
+            if hint := re.search(r"- ?\*.*\*$", sections[-1]):
+                hint_text = hint.group()
+                sections[-1] = sections[-1][:len(hint_text) * -1]
+            # Set the entry to be the new answer
+            sections[int(entry)-1] = answer
+            # Combine the results
+            new_answer = ' + '.join(section.strip() for section in sections)
+            if hint_text:
+                new_answer += ' ' + hint_text.strip()
+            self.answers[int(row)-1] = new_answer
+            await message.add_reaction('✍️')
+            if self.message:
+                await self.message.edit(content=self.status())
+            return True
+        
         if message.content.startswith('!solve'):
             number, answer = message.content[6:].split(maxsplit=1)
             self.answers[int(number)-1] = answer
@@ -66,6 +101,7 @@ class HiddenConnectionsGame():
             if self.message:
                 await self.message.edit(content=self.status())
             return True
+        
         if message.content.startswith('!clear'):
             number = int(message.content[6:])-1
             self.answers[number] = self.clues[number]
@@ -73,6 +109,7 @@ class HiddenConnectionsGame():
             if self.message:
                 await self.message.edit(content=self.status())
             return True
+        
         if message.content.startswith('!theme'):
             self.theme = message.content.split(maxsplit=1)[1]
             await message.add_reaction('✍️')
