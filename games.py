@@ -24,11 +24,18 @@ class HiddenConnectionsGame():
         self.theme = '???'
         self.message = None
         self.numbered = message.content.startswith('!hc#')
+        self.answerThemeList = []
     
     def status(self) -> str:
         if self.numbered:
+            for i in enumerate(1):
+                answerThemeList[i-1] = ""
             return f'Hidden Connections Theme: {self.theme}\n' + '\n'.join(f'> {i}. {answer}' for i, answer in enumerate(self.answers, 1))
         else:
+            i = 0
+            for answer in self.answers:
+                answerThemeList[i] = ""
+                i++
             return f'Hidden Connections Theme: {self.theme}\n' + '\n'.join(f'> {answer}' for answer in self.answers)
     
     async def update_message(self, message: discord.Message) -> bool:
@@ -62,6 +69,7 @@ class HiddenConnectionsGame():
             
         if message.content.startswith('!rowtheme'):
             number, theme = message.content[9:].split(maxsplit=1)
+            answerThemeList[number] = theme
             answer = self.answers[int(number)-1]
             if hint := re.search(r"- ?\*.*\*$", answer):
                 hint_text = hint.group()
@@ -96,7 +104,7 @@ class HiddenConnectionsGame():
         
         if message.content.startswith('!solve'):
             number, answer = message.content[6:].split(maxsplit=1)
-            self.answers[int(number)-1] = answer
+            self.answers[int(number)-1] = answer + answerThemeList[number]
             await message.add_reaction('✍️')
             if self.message:
                 await self.message.edit(content=self.status())
