@@ -45,7 +45,7 @@ class MyClient(discord.Client):
             return
             
         
-        if message.content.startswith('!20q'):
+        if message.content.lower().startswith('!20q'):
             # Start a 20 questions game
             if any(message.author.id == game.author.id for game in self.games):
                 await message.channel.send('You have a game running')
@@ -57,7 +57,7 @@ class MyClient(discord.Client):
             await message.channel.send('Starting 20 questions')
             return
         
-        if message.content.startswith('!hc'):
+        if message.content.lower().startswith('!hc'):
             # Start a Hidden Connections game
             if any(message.author.id == game.author.id for game in self.games):
                 await message.channel.send('You have a game running')
@@ -69,7 +69,7 @@ class MyClient(discord.Client):
             await message.channel.send('Starting Hidden Connections Game')
             return
         
-        if message.content.startswith('!nmp'):
+        if message.content.lower().startswith('!nmp'):
             # Start a Needs More Pixels game
             if any(message.author.id == game.author.id for game in self.games):
                 await message.channel.send('You have a game running')
@@ -89,7 +89,7 @@ class MyClient(discord.Client):
             await message.channel.send('Starting Needs More Pixels')
             return
         
-        if message.content.startswith('!redact') or message.content.startswith('!manualredact'):
+        if message.content.lower().startswith('!redact') or message.content.lower().startswith('!manualredact'):
             # Start a Redacted game
             if any(message.author.id == game.author.id for game in self.games):
                 await message.channel.send('You have a game running')

@@ -111,7 +111,10 @@ class HiddenConnectionsGame():
             if theme := re.search(r" - ?\*.*\*$", answer):
                 rowtheme = theme.group()
                 answer = answer[:len(rowtheme) * -1]
-            self.answers[int(number)-1] = answer + f"{rowtheme}"
+            if rowtheme:
+                self.answers[int(number)-1] = answer + f"{rowtheme}"
+            else:
+                self.answers[int(number)-1] = answer
             await message.add_reaction('✍️')
             if self.message:
                 await self.message.edit(content=self.status())
