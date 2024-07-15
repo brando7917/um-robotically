@@ -102,7 +102,10 @@ class HiddenConnectionsGame():
         
         if message.content.startswith('!solve'):
             number, answer = message.content[6:].split(maxsplit=1)
-            self.answers[int(number)-1] = answer + f" - *{self.answerThemeList[int(number)-int(1)]}*"
+            if self.answerThemeList[int(number)-int(1)] == "":
+                self.answers[int(number)-1] = answer
+            else:
+                self.answers[int(number)-1] = answer + f" - *{self.answerThemeList[int(number)-int(1)]}*"
             await message.add_reaction('✍️')
             if self.message:
                 await self.message.edit(content=self.status())
