@@ -19,11 +19,11 @@ class HiddenConnectionsGame():
         if all(clue.startswith('>') for clue in clues):
             clues = [clue[1:].strip() for clue in clues]
         
-        self.clues = clues
-        self.answers = clues[:] # Deep copy the clues
+        self.clues = [clue for clue in clues if clue] # Remove blank lines
+        self.answers = self.clues[:] # Deep copy the clues
         self.theme = '???'
         self.message = None
-        self.numbered = message.content.startswith('!hc#')
+        self.numbered = message.content.lower().startswith('!hc#')
     
     def status(self) -> str:
         if self.numbered:
@@ -35,15 +35,15 @@ class HiddenConnectionsGame():
         if message.channel.id != self.channel.id:
             return True
         
-        if message.content.startswith('!game'):
+        if message.content.lower().startswith('!game'):
             self.message = await message.channel.send(self.status())
             return True
         
         if (message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles)):
-            if message.content.startswith('!end'):
+            if message.content.lower().startswith('!end'):
                 await message.channel.send('Congratulations!')
                 return False
-            if message.content.startswith('!add'):
+            if message.content.lower().startswith('!add'):
                 number, new_clue = message.content[4:].split(maxsplit=1)
                 self.clues.insert(int(number)-1, new_clue)
                 self.answers.insert(int(number)-1, new_clue)
@@ -51,7 +51,7 @@ class HiddenConnectionsGame():
                 if self.message:
                     await self.message.edit(content=self.status())
                 return True
-            if message.content.startswith('!edit'):
+            if message.content.lower().startswith('!edit'):
                 number, new_clue = message.content[5:].split(maxsplit=1)
                 self.clues[int(number)-1] = new_clue
                 self.answers[int(number)-1] = new_clue
@@ -60,7 +60,7 @@ class HiddenConnectionsGame():
                     await self.message.edit(content=self.status())
                 return True
             
-        if message.content.startswith('!rowtheme'):
+        if message.content.lower().startswith('!rowtheme'):
             number, theme = message.content[9:].split(maxsplit=1)
             answer = self.answers[int(number)-1]
             if hint := re.search(r"- ?\*.*\*$", answer):
@@ -72,7 +72,7 @@ class HiddenConnectionsGame():
                 await self.message.edit(content=self.status())
             return True
         
-        if message.content.startswith('!adjust'):
+        if message.content.lower().startswith('!adjust'):
             indeces, answer = message.content[7:].split(maxsplit=1)
             # Parse indeces: row,entry, 1-indexed
             row, entry = indeces.split(sep=',')
@@ -94,7 +94,7 @@ class HiddenConnectionsGame():
                 await self.message.edit(content=self.status())
             return True
         
-        if message.content.startswith('!solve'):
+        if message.content.lower().startswith('!solve'):
             number, answer = message.content[6:].split(maxsplit=1)
             self.answers[int(number)-1] = answer
             await message.add_reaction('✍️')
@@ -102,7 +102,7 @@ class HiddenConnectionsGame():
                 await self.message.edit(content=self.status())
             return True
         
-        if message.content.startswith('!clear'):
+        if message.content.lower().startswith('!clear'):
             number = int(message.content[6:])-1
             self.answers[number] = self.clues[number]
             await message.add_reaction('✍️')
@@ -110,7 +110,7 @@ class HiddenConnectionsGame():
                 await self.message.edit(content=self.status())
             return True
         
-        if message.content.startswith('!theme'):
+        if message.content.lower().startswith('!theme'):
             self.theme = message.content.split(maxsplit=1)[1]
             await message.add_reaction('✍️')
             if self.message:
@@ -140,15 +140,15 @@ class TwentyQuestionsGame():
         if message.channel.id != self.channel.id:
             return True
         
-        if message.content.startswith('!game'):
+        if message.content.lower().startswith('!game'):
             self.message = await message.channel.send(self.status(), embed=self.image_embed)
             return True
         
         if (message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles)):
-            if message.content.startswith('!end'):
+            if message.content.lower().startswith('!end'):
                 await message.channel.send('Ending Twenty Questions')
                 return False
-            if message.content.startswith('!delete'):
+            if message.content.lower().startswith('!delete'):
                 await message.channel.send(f'Deleted {self.questions.pop()}')
                 return True
         return True
@@ -185,9 +185,9 @@ class RedactedGame():
         self.author = message.author
         messageContent = message.content[message.content.find('\n')+1:].replace('’', "'")
         
-        if message.content.startswith('!manualredact'): #manual censoring
+        if message.content.lower().startswith('!manualredact'): #manual censoring
             pass
-        elif message.content.startswith('!redactall'):
+        elif message.content.lower().startswith('!redactall'):
             messageContent = re.sub(r"([\w']+)", r'||\1||', messageContent)
         else: #auto censoring
             newContent = ''
@@ -233,10 +233,10 @@ class RedactedGame():
         
         # Parse the !game and !end command in a DM or the game
         if (isinstance(message.channel, discord.DMChannel) and message.author.id == self.author.id) or message.channel.id == self.channel.id:
-            if words[0] == '!game':
+            if words[0].lower() == '!game':
                 self.message = await message.channel.send(self.censor())
                 return True
-            if words[0] == '!end':
+            if words[0].lower() == '!end':
                 await message.channel.send('Game Canceled')
                 return False
         # Don't process messages outside the game channel
@@ -245,10 +245,10 @@ class RedactedGame():
         
         # Let the game creator or mod end the game
         if message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles):
-            if words[0] == '!reveal':
+            if words[0].lower() == '!reveal':
                 await message.channel.send(self.plain_text)
                 return False
-            if words[0] == '!end':
+            if words[0].lower() == '!end':
                 await message.channel.send('Game Canceled')
                 return False
         
@@ -311,14 +311,14 @@ class NeedsMorePixelsGame():
             return True
         
         if message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles):
-            if words[0] == '!reveal':
+            if words[0].lower() == '!reveal':
                 self.image_file.seek(0)
                 await message.channel.send(file=discord.File(self.image_file, filename="nmp"+self.filetype))
                 return False
-            if words[0] == '!end':
+            if words[0].lower() == '!end':
                 await message.channel.send('Game Canceled')
                 return False
-            if words[0] == '!next':
+            if words[0].lower() == '!next':
                 self.image_file.seek(0)
                 img = Image.open(self.image_file)
                 # Calculate the resize values on the first round
