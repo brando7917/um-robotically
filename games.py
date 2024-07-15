@@ -91,6 +91,8 @@ class HiddenConnectionsGame():
                 hint_text = hint.group()
                 sections[-1] = sections[-1][:len(hint_text) * -1]
             # Set the entry to be the new answer
+            if ord('a') <= ord(entry) and ord(entry) <= ord('z'):
+                entry = ord(entry) - ord('a') + 1
             sections[int(entry)-1] = answer
             # Combine the results
             new_answer = ' + '.join(section.strip() for section in sections)
@@ -104,7 +106,12 @@ class HiddenConnectionsGame():
         
         if message.content.lower().startswith('!solve'):
             number, answer = message.content[6:].split(maxsplit=1)
-            self.answers[int(number)-1] = answer
+            if theme := re.search(r" - ?\*.*\*$", self.answers[int(number)-1]):
+                rowtheme = theme.group()
+            if theme := re.search(r" - ?\*.*\*$", answer):
+                rowtheme = theme.group()
+                answer = answer[:len(rowtheme) * -1]
+            self.answers[int(number)-1] = answer + f"{rowtheme}"
             await message.add_reaction('✍️')
             if self.message:
                 await self.message.edit(content=self.status())
