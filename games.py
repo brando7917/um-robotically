@@ -59,6 +59,14 @@ class HiddenConnectionsGame():
                 if self.message:
                     await self.message.edit(content=self.status())
                 return True
+            if message.content.lower().startswith('!delete'):
+                number = int(message.content[7:])-1
+                self.clues.pop(number)
+                self.answers.pop(number)
+                await message.add_reaction('✍️')
+                if self.message:
+                    await self.message.edit(content=self.status())
+                return True
             
         if message.content.lower().startswith('!rowtheme'):
             number, theme = message.content[9:].split(maxsplit=1)
