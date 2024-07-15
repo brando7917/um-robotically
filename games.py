@@ -24,13 +24,8 @@ class HiddenConnectionsGame():
         self.theme = '???'
         self.message = None
         self.numbered = message.content.startswith('!hc#')
-        self.answerThemeList = [""]
     
     def status(self) -> str:
-        i = 0
-        for answer in self.answers:
-            self.answerThemeList.append("")
-            i=i+1
         if self.numbered:
             return f'Hidden Connections Theme: {self.theme}\n' + '\n'.join(f'> {i}. {answer}' for i, answer in enumerate(self.answers, 1))
         else:
@@ -67,7 +62,6 @@ class HiddenConnectionsGame():
             
         if message.content.startswith('!rowtheme'):
             number, theme = message.content[9:].split(maxsplit=1)
-            self.answerThemeList[int(number)-1] = theme
             answer = self.answers[int(number)-1]
             if hint := re.search(r"- ?\*.*\*$", answer):
                 hint_text = hint.group()
@@ -89,7 +83,10 @@ class HiddenConnectionsGame():
                 hint_text = hint.group()
                 sections[-1] = sections[-1][:len(hint_text) * -1]
             # Set the entry to be the new answer
+            if ord('a') <= ord(entry) and ord(entry) <= ord('z'):
+                entry = ord(entry) - ord('a') + 1
             sections[int(entry)-1] = answer
+            print(hint_text)
             # Combine the results
             new_answer = ' + '.join(section.strip() for section in sections)
             if hint_text:
@@ -102,10 +99,12 @@ class HiddenConnectionsGame():
         
         if message.content.startswith('!solve'):
             number, answer = message.content[6:].split(maxsplit=1)
-            if self.answerThemeList[int(number)-int(1)] == "":
-                self.answers[int(number)-1] = answer
-            else:
-                self.answers[int(number)-1] = answer + f" - *{self.answerThemeList[int(number)-int(1)]}*"
+            if theme := re.search(r" - ?\*.*\*$",   self.answers[int(number)-1]):
+                rowtheme = theme.group()
+            if theme := re.search(r" - ?\*.*\*$", answer):
+                rowtheme = theme.group()
+                answer = answer[:len(rowtheme) * -1]
+            self.answers[int(number)-1] = answer + f"{rowtheme}"
             await message.add_reaction('✍️')
             if self.message:
                 await self.message.edit(content=self.status())
@@ -114,7 +113,6 @@ class HiddenConnectionsGame():
         if message.content.startswith('!clear'):
             number = int(message.content[6:])-1
             self.answers[number] = self.clues[number]
-            self.answerThemeList[number] = ""
             await message.add_reaction('✍️')
             if self.message:
                 await self.message.edit(content=self.status())
