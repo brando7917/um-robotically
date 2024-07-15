@@ -106,15 +106,13 @@ class HiddenConnectionsGame():
         
         if message.content.lower().startswith('!solve'):
             number, answer = message.content[6:].split(maxsplit=1)
+            rowtheme = ""
             if theme := re.search(r" - ?\*.*\*$", self.answers[int(number)-1]):
                 rowtheme = theme.group()
             if theme := re.search(r" - ?\*.*\*$", answer):
                 rowtheme = theme.group()
                 answer = answer[:len(rowtheme) * -1]
-            if rowtheme:
-                self.answers[int(number)-1] = answer + f"{rowtheme}"
-            else:
-                self.answers[int(number)-1] = answer
+            self.answers[int(number)-1] = answer + f"{rowtheme}"
             await message.add_reaction('✍️')
             if self.message:
                 await self.message.edit(content=self.status())
