@@ -69,12 +69,16 @@ class HiddenConnectionsGame():
                 return True
             
         if message.content.lower().startswith('!rowtheme'):
-            number, theme = message.content[9:].split(maxsplit=1)
+            content = message.content[9:].split(maxsplit=1)
+            if len(content) == 1: # Blank rowtheme, erase the row theme
+                number, theme = content[0], ""
+            else:
+                number, theme = message.content[9:].split(maxsplit=1)
             answer = self.answers[int(number)-1]
             if hint := re.search(r"- ?\*.*\*$", answer):
                 hint_text = hint.group()
                 answer = answer[:len(hint_text) * -1]
-            self.answers[int(number)-1] = answer.strip() + f' - *{theme}*'
+            self.answers[int(number)-1] = answer.strip() + (f' - *{theme}*' if theme else "")
             await message.add_reaction('✍️')
             if self.message:
                 await self.message.edit(content=self.status())
