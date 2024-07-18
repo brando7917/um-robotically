@@ -86,8 +86,16 @@ class HiddenConnectionsGame():
         
         if message.content.lower().startswith('!adjust'):
             indeces, answer = message.content[7:].split(maxsplit=1)
+            
             # Parse indeces: row,entry, 1-indexed
-            row, entry = indeces.split(sep=',')
+            row_entry = indeces.split(sep=',')
+            if len(row_entry) == 2: # normal comma delimination
+                row, entry = row_entry
+            elif ord('a') <= ord(row_entry[0][-1]) and ord(row_entry[0][-1]) <= ord('z'): # letter format without comma
+                row, entry = row_entry[0][:-1], row_entry[0][-1]
+            else: # formatting error, return
+                return True
+            
             # Split row into sections
             sections = self.answers[int(row)-1].split(sep=' + ')
             hint_text = None
