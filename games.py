@@ -7,6 +7,8 @@ from PIL import Image
 from datetime import datetime, timezone, timedelta
 
 snow_stemmer = SnowballStemmer(language='english')
+SENIOR_ROLE_ID = 1173817341876903956
+QUESTIONEER_ID = 1237945777100427275
 
 class HiddenConnectionsGame():
     def __init__(self, client: discord.Client, message: discord.Message) -> None:
@@ -35,7 +37,7 @@ class HiddenConnectionsGame():
             self.message = await message.channel.send(self.status())
             return True
         
-        if (message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles)):
+        if (message.author.id == self.author.id or any(role.id == QUESTIONEER_ID for role in message.author.roles)):
             if message.content.lower().startswith('!end'):
                 await message.channel.send('Congratulations!')
                 return False
@@ -172,7 +174,7 @@ class TwentyQuestionsGame():
             self.message = await message.channel.send(self.status(), embed=self.image_embed)
             return True
         
-        if (message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles)):
+        if (message.author.id == self.author.id or any(role.id == QUESTIONEER_ID for role in message.author.roles)):
             if message.content.lower().startswith('!end'):
                 await message.channel.send('Ending Twenty Questions')
                 return False
@@ -272,7 +274,7 @@ class RedactedGame():
             return True
         
         # Let the game creator or mod end the game
-        if message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles):
+        if message.author.id == self.author.id or any(role.id == QUESTIONEER_ID for role in message.author.roles):
             if words[0].lower() == '!reveal':
                 await message.channel.send(self.plain_text)
                 return False
@@ -338,7 +340,7 @@ class NeedsMorePixelsGame():
         if message.channel.id != self.channel.id:
             return True
         
-        if message.author.id == self.author.id or any(role.id == 1173817341876903956 for role in message.author.roles):
+        if message.author.id == self.author.id or any(role.id == QUESTIONEER_ID for role in message.author.roles):
             if words[0].lower() == '!reveal':
                 self.image_file.seek(0)
                 await message.channel.send(file=discord.File(self.image_file, filename="nmp"+self.filetype))
