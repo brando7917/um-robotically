@@ -135,7 +135,11 @@ class HiddenConnectionsGame():
             return True
         
         if message.content.lower().startswith('!theme'):
-            self.theme = message.content.split(maxsplit=1)[1]
+            themetext = message.content.split(maxsplit=1)
+            if len(themetext) == 1: # blank !theme, reset
+                self.theme = '???'
+            else:
+                self.theme = themetext[1]
             await message.add_reaction('✍️')
             if self.message:
                 await self.message.edit(content=self.status())
