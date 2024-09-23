@@ -109,10 +109,10 @@ class MyClient(discord.Client):
             if any(message.author.id == game.author.id for game in self.games):
                 await message.channel.send('You have a game running')
                 return
-            if any(isinstance(game, PointsGame) and game.channel.id == message.channel.id for game in self.games):
+            if any(isinstance(game, PointsGame) and game.channel.id == message.channel.id and game.author.id != message.author.id for game in self.games):
                 await message.channel.send('There is a game of this type running in this channel')
                 return
-            self.games.add(RedactedGame(self, message))
+            self.games.add(PointsGame(self, message))
             await message.channel.send('Starting Points Game')
             return
         

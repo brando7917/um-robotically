@@ -20,7 +20,7 @@ class PointsGame():
         self.points_dict = defaultdict(int)
     
     def status(self) -> str:
-        return 'Point Totals:\n' + '\n'.join(f'{user_id} with {points} points.' for user_id, points in sorted(self.points_dict.items(), key=lambda x: x[1]))
+        return 'Point Totals:\n' + '\n'.join(f'<@{user_id}> with {points} points.' for user_id, points in sorted(self.points_dict.items(), key=lambda x: x[1]))
     
     async def update_message(self, message: discord.Message) -> bool:
         if message.channel.id != self.channel.id:
@@ -33,19 +33,28 @@ class PointsGame():
             await message.channel.send(self.status())
             return False
         
+        if message.content.lower().startswith('!game'):
+            await message.channel.send(self.status(), silent=True)
+            return True
+        
         if not message.content.lower().startswith('!p'):
             return True
         
         if len(message.raw_mentions) == 0:
-            await message.channel.send(self.status())
+            await message.channel.send(self.status(), silent=True)
             return True
         point_value = re.search(r'[\d-]+$', message.content.lower().split()[0])
         if not point_value:
             point_value = 1
+        else:
+            point_value = int(point_value.group(0))
         for user_id in message.raw_mentions:
             self.points_dict[user_id] += point_value
         await message.add_reaction('✍️')
         return True
+    
+    async def update_reaction(self, reaction_event: discord.RawReactionActionEvent) -> bool:
+        return True # No-op on reactions
 
 class HiddenConnectionsGame():
     def __init__(self, client: discord.Client, message: discord.Message) -> None:
