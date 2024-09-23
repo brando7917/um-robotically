@@ -5,10 +5,47 @@ import os
 from nltk.stem.snowball import SnowballStemmer
 from PIL import Image
 from datetime import datetime, timezone, timedelta
+from collections import defaultdict
 
 snow_stemmer = SnowballStemmer(language='english')
 SENIOR_ROLE_ID = 1173817341876903956
 QUESTIONEER_ID = 1237945777100427275
+
+class PointsGame():
+    def __init__(self, client: discord.Client, message: discord.Message) -> None:
+        self.client = client
+        self.author = message.author
+        self.channel = message.channel
+        
+        self.points_dict = defaultdict(int)
+    
+    def status(self) -> str:
+        return 'Point Totals:\n' + '\n'.join(f'{user_id} with {points} points.' for user_id, points in sorted(self.points_dict.items(), key=lambda x: x[1]))
+    
+    async def update_message(self, message: discord.Message) -> bool:
+        if message.channel.id != self.channel.id:
+            return True
+        
+        if not (message.author.id == self.author.id or any(role.id == QUESTIONEER_ID for role in message.author.roles)):
+            return True
+        
+        if message.content.lower().startswith('!end'):
+            await message.channel.send(self.status())
+            return False
+        
+        if not message.content.lower().startswith('!p'):
+            return True
+        
+        if len(message.raw_mentions) == 0:
+            await message.channel.send(self.status())
+            return True
+        point_value = re.search(r'[\d-]+$', message.content.lower().split()[0])
+        if not point_value:
+            point_value = 1
+        for user_id in message.raw_mentions:
+            self.points_dict[user_id] += point_value
+        await message.add_reaction('✍️')
+        return True
 
 class HiddenConnectionsGame():
     def __init__(self, client: discord.Client, message: discord.Message) -> None:

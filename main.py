@@ -1,5 +1,5 @@
 import discord
-from games import RedactedGame, TwentyQuestionsGame, NeedsMorePixelsGame, HiddenConnectionsGame
+from games import RedactedGame, TwentyQuestionsGame, NeedsMorePixelsGame, HiddenConnectionsGame, PointsGame
 
 BOT_STUFF_ID = 1173819549326524537
 
@@ -102,6 +102,18 @@ class MyClient(discord.Client):
                 return
             self.games.add(RedactedGame(self, message))
             await message.channel.send('Starting Redacted Game')
+            return
+        
+        if message.content.lower().startswith('!point'):
+            # Start a Points game
+            if any(message.author.id == game.author.id for game in self.games):
+                await message.channel.send('You have a game running')
+                return
+            if any(isinstance(game, PointsGame) and game.channel.id == message.channel.id for game in self.games):
+                await message.channel.send('There is a game of this type running in this channel')
+                return
+            self.games.add(RedactedGame(self, message))
+            await message.channel.send('Starting Points Game')
             return
         
         # Play each game, removing games that return False (done)
